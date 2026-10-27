@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Calm teal. brand-600 on white is 4.8:1, so white text on it passes AA. */
+  --color-brand-50: #effaf8;
+  --color-brand-100: #d5f2ed;
+  --color-brand-200: #abe4db;
+  --color-brand-500: #1f9d8e;
+  --color-brand-600: #12806f;
+  --color-brand-700: #0e675a;
+  --color-brand-900: #0b3d36;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--color-slate-50);
+  color: var(--color-slate-900);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
