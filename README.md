@@ -10,13 +10,13 @@ See [docs/architecture.md](docs/architecture.md), [docs/contracts.md](docs/contr
 
 ## Build steps
 
-| Step | Scope                              | Status                                                                                                                                      |
-| ---- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0    | Toolchain: JDK 25, Node 26         | Cannot be installed on the Windows dev machine; use the Mac                                                                                 |
-| 1    | Scaffold, `CLAUDE.md`, contracts   | Approved                                                                                                                                    |
-| 2    | Java MCP server + connection spike | Approved. Full verification pending on the Mac, see [docs/verification.md](docs/verification.md)                                            |
-| 3    | Node LangGraph orchestrator        | Approved. Fully tested on the Windows machine (Node 24); a Mac run is still to do                                                           |
-| 4    | React portal and nurse dashboard   | Written, awaiting approval. Tested and walked through in a browser on the Windows machine; see [docs/verification.md](docs/verification.md) |
+| Step | Scope                              | Status                                                                                                                                              |
+| ---- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0    | Toolchain: JDK 25, Node 26         | Cannot be installed on the Windows dev machine; use the Mac                                                                                         |
+| 1    | Scaffold, `CLAUDE.md`, contracts   | Approved                                                                                                                                            |
+| 2    | Java MCP server + connection spike | Approved. Full verification pending on the Mac, see [docs/verification.md](docs/verification.md)                                                    |
+| 3    | Node LangGraph orchestrator        | Approved. Fully tested on the Windows machine (Node 24); a Mac run is still to do                                                                   |
+| 4    | React portal and nurse dashboard   | Approved. Tested and walked through in a browser on the Windows machine; a Mac run is still to do, see [docs/verification.md](docs/verification.md) |
 
 ## Quick start
 

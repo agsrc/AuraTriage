@@ -132,4 +132,4 @@ npm run build -w patient-portal-web  # typecheck plus production bundle
 
 ## Status
 
-Steps 1 to 3 are approved. Step 4 (React portal and nurse dashboard) is written and awaiting approval. This Windows machine has JDK 21 and Node 24: the orchestrator and the portal are fully tested here, and the portal was also walked through in a browser. The Java Gatherer classes and the JDK 25 / Node 26 builds are verified on the Mac only. See `docs/verification.md`.
+All four steps are approved. This Windows machine has JDK 21 and Node 24: the orchestrator and the portal are fully tested here, and the portal was also walked through in a browser. The Java Gatherer classes and the JDK 25 / Node 26 builds are verified on the Mac only. See `docs/verification.md`.
