@@ -1,0 +1,4 @@
+# One file pins both runtimes on Windows and macOS. Install mise (https://mise.jdx.dev), then: mise install
+[tools]
+java = "temurin-25"
+node = "26"

@@ -1,0 +1,27 @@
+{
+  "name": "auratriage",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agentic healthcare triage MVP: Java MCP server, LangGraph orchestrator, React portal. Synthetic data only.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "workspaces": [
+    "agent-orchestrator",
+    "patient-portal-web"
+  ],
+  "scripts": {
+    "doctor": "node scripts/doctor.mjs",
+    "ehr:build": "node scripts/mvn.mjs -B -DskipTests package",
+    "ehr:verify": "node scripts/mvn.mjs -B verify",
+    "spike:mcp": "node agent-orchestrator/spike/mcp-smoke.mjs",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "biome check .",
+    "format": "biome check --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.3"
+  }
+}

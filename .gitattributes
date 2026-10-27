@@ -1,0 +1,18 @@
+# Normalize to LF in the repo and in working trees on every OS.
+# A CRLF mvnw fails on macOS/Linux, so this matters for the Windows -> Mac move.
+* text=auto eol=lf
+
+# Windows-only scripts keep CRLF.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# POSIX scripts must stay LF.
+mvnw text eol=lf
+*.sh text eol=lf
+
+# Binary assets.
+*.jar binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary
