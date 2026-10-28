@@ -18,6 +18,7 @@ import { LlmUnavailableError } from "../llm/port.js";
 import type { Logger } from "../logger.js";
 import type { EscalationRecord, Stores } from "../persistence/types.js";
 import { EMERGENCY_NOTICE } from "../safety/redFlags.js";
+import { withSpan } from "../telemetry/spans.js";
 import { messagesOf, pendingEscalation } from "./snapshot.js";
 
 /** Upper bound on graph steps per turn, so a looping model cannot run forever. */
@@ -65,7 +66,16 @@ export class ChatService {
       const countBefore = messagesOf(before).length;
 
       try {
-        await this.graph.invoke({ messages: [humanMessage(request.message, this.now())] }, config);
+        await withSpan(
+          "chat.turn",
+          {
+            "openinference.span.kind": "CHAIN",
+            "triage.thread_id": threadId,
+            "triage.patient_id": patientId,
+          },
+          () =>
+            this.graph.invoke({ messages: [humanMessage(request.message, this.now())] }, config),
+        );
       } catch (error) {
         throw this.translate(error);
       }
@@ -150,7 +160,16 @@ export class ChatService {
       }
 
       try {
-        await this.graph.invoke(new Command({ resume: resolution }), config);
+        await withSpan(
+          "chat.resolve",
+          {
+            "openinference.span.kind": "CHAIN",
+            "triage.thread_id": threadId,
+            "triage.patient_id": current.patientId,
+            "triage.decision": resolution.decision,
+          },
+          () => this.graph.invoke(new Command({ resume: resolution }), config),
+        );
       } catch (error) {
         throw this.translate(error);
       }

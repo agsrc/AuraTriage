@@ -92,6 +92,7 @@ The checks in "Run this on the Mac" pass. That covers the code that could not be
 
 - **Claude.** `LLM_PROVIDER=anthropic` (`src/llm/anthropic.ts`) needs a real API key and has never been run. With a key, first try one routine message and one booking, and check that tool calls use the `SESSION` placeholder and that `request_nurse_review` appears for an urgent-sounding case.
 - **Ollama.** `LLM_PROVIDER=ollama` (`src/llm/ollama.ts`) is tested against a fake HTTP server only. On the Mac: `ollama pull qwen3:8b` (or another model tagged "tools"), set `LLM_PROVIDER=ollama`, and try a routine message, "dizzy and headache" (expect a nurse escalation) and a booking. Then stop Ollama and send "chest pain": the emergency notice must still appear.
+- **Phoenix tracing.** Tested against a fake collector only. On the Mac: `pip install arize-phoenix`, `phoenix serve`, set `OTEL_ENABLED=true`, run one conversation, then open `http://localhost:6006`. Expect a trace per turn (`chat.turn`, node spans, `llm.*` and `tool.invoke` spans) and check by eye that no message text appears in any attribute.
 - **Graceful shutdown** (the Ctrl+C check above). Windows ends child processes abruptly, so this path can only be checked on the Mac.
 
 Web portal:

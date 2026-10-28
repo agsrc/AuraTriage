@@ -40,6 +40,7 @@ npm run build -w patient-portal-web  # typecheck plus production bundle
 - `safety/redFlags.ts`: deterministic detector and the static emergency notice. Golden set in `test/redFlags.test.ts`.
 - `graph/`: `state.ts`, `edges.ts` (typed routers), `nodes.ts`, `build.ts`, `localTools.ts`, `prompts.ts`, `messages.ts`.
 - `llm/`: `port.ts` (`LlmPort`), `anthropic.ts` (Claude), `ollama.ts` (a local model through Ollama), `demo.ts` (deterministic offline model, the default).
+- `telemetry/`: `tracing.ts` (OpenTelemetry setup, off by default), `spans.ts` (`withSpan`, `tracedNode`, `withLlmTracing`, and the `SafeAttributes` allowlist).
 - `mcp/ehr.ts`: adapter connection and the `bindSessionPatient` hook. `mcp/schemas.ts`: strict schemas for tool results.
 - `persistence/`: `NodeSqliteSaver` checkpointer plus thread and escalation stores, in memory or SQLite.
 - `chat/service.ts`: ownership rules, turns and the nurse queue. `api/app.ts`: Express routes, auth, error mapping.
@@ -61,6 +62,7 @@ npm run build -w patient-portal-web  # typecheck plus production bundle
 - `@langchain/mcp-adapters` 2.x: class `MCPAdapter`, config key `servers` (not `mcpServers`), tool names are prefixed `{server}_{tool}` so the EHR tools appear as `ehr_get_patient_history` etc. Never hard-code unprefixed names in graph code. The global `beforeToolCall` hook on the adapter config receives the raw tool name (`get_patient_history`, no prefix), the args and the LangGraph `config`, and the `args` it returns are merged over the model's. Installed: adapter 2.0.1, `@langchain/core` 1.3.0, `@langchain/langgraph` 1.5.3.
 - LangGraph.js 1.x: use `interrupt()` + `Command({ resume })` with a checkpointer and a `thread_id`. A node re-runs from its first line on resume. The checkpointer is our own `NodeSqliteSaver`, a port of the official SQLite saver onto Node's built-in `node:sqlite`, because the official one needs the native `better-sqlite3`. `node:sqlite` prints an ExperimentalWarning on Node 24.
 - Web: React 19.3, React Router 8 (needs Node 22.22+), Vite 8, Tailwind 4.3 via its Vite plugin (no config file, tokens in `src/index.css`), Testing Library with jsdom 30.
+- Tracing: `@opentelemetry/api` 1.9 (the node SDK's peer range stops below 1.10), `sdk-trace-node`, `sdk-trace-base` and `resources` 2.12, `exporter-trace-otlp-proto` 0.223. The protobuf exporter is used because Phoenix reads OTLP protobuf. Keep the 2.x family together: the newest `exporter-trace-otlp-http` is built on a different SDK major and does not resolve with it.
 - Also pinned: Express 5, Zod 4, pino 10, jose 6, Vitest 5, tsx (dev only). `.env` at the repo root is loaded with `process.loadEnvFile`, so there is no dotenv. `LLM_PROVIDER` defaults to the offline demo model; `anthropic` needs `ANTHROPIC_API_KEY` and has not been run against the real API yet. `ollama` (`@langchain/ollama` 1.3) talks to a local daemon, with thinking off and `OLLAMA_NUM_CTX` (default 8192) as the context size; its tests use a fake HTTP server, so it has not been run against a real model yet.
 - TypeScript 7 has no stable compiler API until 7.1, so `typescript-eslint` is not used. Biome does lint/format; `tsc` does type checking.
 
@@ -71,7 +73,8 @@ npm run build -w patient-portal-web  # typecheck plus production bundle
 - Never log PHI at any level, in Java, Node or React: `patient_name`/`patientName`, `dob`, address, phone, email, SSN, MRN, insurance IDs, and the free text of patient messages or symptoms. Do not put PHI in exception messages, URLs or query strings.
 - Log only opaque IDs (`patientId` like `P-1234`, `threadId`), event names, counts, durations and error codes.
 - Tool results follow minimum-necessary: return age band, conditions, medications, allergies and recent encounters. Do not return name, DOB or address unless a feature truly needs it.
-- Tracing stays off (`LANGSMITH_TRACING=false`, `LANGCHAIN_TRACING_V2=false`). Request bodies are never logged; pino uses `redact`.
+- LangSmith stays off (`LANGSMITH_TRACING=false`, `LANGCHAIN_TRACING_V2=false`, forced at start-up). Request bodies are never logged; pino uses `redact`.
+- OpenTelemetry tracing (`OTEL_ENABLED=true`, to a local Phoenix) is metadata only. A span may carry only what `SafeAttributes` in `telemetry/spans.ts` lists. To record something new, add a typed field there with a reason; never add free-form text, tool arguments or results, and never `recordException` (messages can carry user text).
 - Test data is synthetic and labelled as such.
 
 ### Java / MCP server

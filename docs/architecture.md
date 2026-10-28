@@ -72,3 +72,11 @@ One Vite app with two routes: `/` (patient chat) and `/nurse` (dashboard). The b
 - **Held conversations.** After an escalation the patient's thread is `awaiting_nurse`. The chat disables its composer, shows the hold banner and polls `GET /api/chat/:threadId` every 3 seconds until the status is `responded`. The emergency notice is part of the thread, so a reload still shows it and the "Call 911" banner.
 - **Nurse queue.** The list refreshes every 5 seconds, so new escalations appear without a reload. The detail view loads the transcript, the assistant's concern and its withheld draft, and offers approve, edit or reject.
 - **Sessions are per tab** (`sessionStorage`), so one browser can hold a patient tab and a nurse tab at once.
+
+## Tracing
+
+Off by default. With `OTEL_ENABLED=true` the orchestrator exports OpenTelemetry spans (OTLP protobuf over HTTP) to a local collector, by default Phoenix at `http://localhost:6006`. One conversation turn is one trace: `chat.turn` (or `chat.resolve` for a nurse decision) contains a `node.*` span per graph node, which contain `llm.*` and `tool.invoke` spans.
+
+Spans carry metadata only: node and tool names, opaque thread and patient IDs, whether a red flag fired and its category codes, the nurse's decision, model name, token counts, number of tool calls, durations, and the error class on failure. They never carry message text, tool arguments or results. That is enforced by the type of `SafeAttributes` (`telemetry/spans.ts`), which has no field for them, and by a test that sends synthetic names and messages through the graph and searches everything exported. A paused escalation shows as `triage.interrupted` on `node.human_escalation`, not as an error.
+
+LangSmith is a different thing and stays forced off.

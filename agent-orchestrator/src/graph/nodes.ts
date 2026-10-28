@@ -2,10 +2,19 @@ import { AIMessage, type BaseMessage, SystemMessage, ToolMessage } from "@langch
 import type { RunnableConfig } from "@langchain/core/runnables";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import { interrupt } from "@langchain/langgraph";
-import { type NurseResolution, NurseResolutionSchema, type RedFlagCategory } from "../contracts.js";
+import { z } from "zod";
+import {
+  EscalationReasonSchema,
+  type NurseResolution,
+  NurseResolutionSchema,
+  type RedFlagCategory,
+  RedFlagCategorySchema,
+} from "../contracts.js";
 import type { LlmPort } from "../llm/port.js";
 import { EHR_TOOL, type EhrTools } from "../mcp/ehr.js";
 import { detectRedFlags, EMERGENCY_NOTICE } from "../safety/redFlags.js";
+import { tracedNode, withSpan } from "../telemetry/spans.js";
+import { NODES } from "./edges.js";
 import {
   LOCAL_TOOL,
   ProposeBookingArgsSchema,
@@ -46,6 +55,21 @@ export interface GraphDeps {
   riskClassifier?: RiskClassifier;
   now: () => Date;
 }
+
+/** The few fields of a node's return value that a span may record. Everything else is ignored. */
+const GateUpdateSchema = z.object({
+  escalation: z
+    .object({ reason: EscalationReasonSchema, categories: z.array(RedFlagCategorySchema) })
+    .nullish(),
+});
+const IntakeUpdateSchema = z.object({ intent: z.enum(["triage", "booking"]).nullish() });
+const DecisionUpdateSchema = z.object({
+  escalation: z
+    .object({
+      resolution: z.object({ decision: z.enum(["approve", "edit", "reject"]) }).optional(),
+    })
+    .nullish(),
+});
 
 /** Per-agent allowlist: a model cannot reach a tool its role was not given, whatever it asks for. */
 const TOOLS_FOR_INTENT: Record<Intent, readonly string[]> = {
@@ -237,7 +261,12 @@ export function createNodes(deps: GraphDeps) {
         continue;
       }
       try {
-        results.push(result(textOfOutput(await tool.invoke(call.args, config))));
+        const output = await withSpan(
+          "tool.invoke",
+          { "openinference.span.kind": "TOOL", "tool.name": call.name },
+          () => tool.invoke(call.args, config),
+        );
+        results.push(result(textOfOutput(output)));
         if (call.name === EHR_TOOL.book) {
           pendingBooking = null;
         }
@@ -279,13 +308,25 @@ export function createNodes(deps: GraphDeps) {
     return { messages: [assistantMessage(finalText(escalation, resolution), deps.now())] };
   }
 
+  // Each node is a span. `describe` adds only codes and flags from what the node returned.
   return {
-    safetyGate,
-    patientIntake,
-    triageAgent,
-    bookingAgent,
-    toolExecution,
-    humanEscalation,
-    respond,
+    safetyGate: tracedNode(NODES.safetyGate, safetyGate, (update) => {
+      const gate = GateUpdateSchema.safeParse(update);
+      return {
+        "triage.red_flag": gate.success && gate.data.escalation?.reason === "red_flag",
+        "triage.red_flag_categories": gate.success ? gate.data.escalation?.categories : undefined,
+      };
+    }),
+    patientIntake: tracedNode(NODES.patientIntake, patientIntake, (update) => ({
+      "triage.intent": IntakeUpdateSchema.safeParse(update).data?.intent ?? undefined,
+    })),
+    triageAgent: tracedNode(NODES.triageAgent, triageAgent),
+    bookingAgent: tracedNode(NODES.bookingAgent, bookingAgent),
+    toolExecution: tracedNode(NODES.toolExecution, toolExecution),
+    humanEscalation: tracedNode(NODES.humanEscalation, humanEscalation, (update) => ({
+      "triage.decision":
+        DecisionUpdateSchema.safeParse(update).data?.escalation?.resolution?.decision,
+    })),
+    respond: tracedNode(NODES.respond, respond),
   };
 }

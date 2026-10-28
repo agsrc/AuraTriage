@@ -10,6 +10,8 @@ import type { LlmPort } from "./llm/port.js";
 import { createLogger } from "./logger.js";
 import { connectEhr } from "./mcp/ehr.js";
 import { createPersistence } from "./persistence/index.js";
+import { withLlmTracing } from "./telemetry/spans.js";
+import { initTracing } from "./telemetry/tracing.js";
 
 // src/ and dist/ both sit directly under agent-orchestrator/, which sits under the repo root.
 const repoRoot = path.resolve(import.meta.dirname, "..", "..");
@@ -47,7 +49,14 @@ async function main(): Promise<void> {
 
   const persistence = createPersistence(config.databasePath);
   const ehr = await connectEhr(config.ehrServer);
-  const llm = createLlm(config.llm);
+  const tracing = initTracing(config.tracing);
+  if (tracing.enabled) {
+    logger.info({ event: "tracing_enabled", endpoint: config.tracing.endpoint }, "tracing enabled");
+  }
+  const llm = withLlmTracing(
+    createLlm(config.llm),
+    config.llm.provider === "fake" ? "demo" : config.llm.model,
+  );
   const graph = buildTriageGraph(
     { llm, tools: ehr.tools, now: () => new Date() },
     persistence.checkpointer,
@@ -76,6 +85,7 @@ async function main(): Promise<void> {
     logger.info({ event: "shutdown", signal }, "shutting down");
     server.close(async () => {
       await ehr.close().catch(() => undefined);
+      await tracing.shutdown().catch(() => undefined);
       persistence.close();
       process.exit(0);
     });

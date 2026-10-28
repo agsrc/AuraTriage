@@ -17,6 +17,11 @@ const EnvSchema = z.object({
   OLLAMA_BASE_URL: z.url({ protocol: /^https?$/ }).default("http://localhost:11434"),
   OLLAMA_MODEL: z.string().min(1).default("qwen3:8b"),
   OLLAMA_NUM_CTX: z.coerce.number().int().min(2048).max(131072).default(8192),
+  OTEL_ENABLED: z.stringbool().default(false),
+  OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: z
+    .url({ protocol: /^https?$/ })
+    .default("http://localhost:6006/v1/traces"),
+  OTEL_SERVICE_NAME: z.string().min(1).default("auratriage"),
   EHR_MCP_SERVER: z.enum(["jar", "mock"]).default("jar"),
   EHR_MCP_JAR: z.string().min(1).default("ehr-mcp-server/target/ehr-mcp-server.jar"),
   JAVA_BIN: z.string().min(1).optional(),
@@ -35,6 +40,8 @@ export interface Config {
     | { provider: "fake" }
     | { provider: "anthropic"; apiKey: string; model: string }
     | { provider: "ollama"; baseUrl: string; model: string; numCtx: number };
+  /** OpenTelemetry export of metadata-only spans. Off unless OTEL_ENABLED=true. */
+  tracing: { enabled: boolean; endpoint: string; serviceName: string };
   ehrServer: { command: string; args: readonly string[] };
   /** Absolute path of the SQLite file, or null to keep everything in memory. */
   databasePath: string | null;
@@ -115,6 +122,11 @@ export function loadConfig(env: NodeJS.ProcessEnv, repoRoot: string): Config {
     demoLoginEnabled,
     demoPatientIds,
     llm,
+    tracing: {
+      enabled: vars.OTEL_ENABLED,
+      endpoint: vars.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+      serviceName: vars.OTEL_SERVICE_NAME,
+    },
     ehrServer,
     databasePath: vars.PERSISTENCE === "memory" ? null : path.resolve(repoRoot, vars.CHECKPOINT_DB),
   };
