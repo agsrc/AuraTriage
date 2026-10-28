@@ -26,6 +26,7 @@ npm run format                       # Biome (apply fixes)
 npm run ehr:verify                   # Java unit tests + stdio integration test on the packaged JAR
 npm run ehr:build                    # package target/ehr-mcp-server.jar without tests
 npm run spike:mcp                    # Node adapter <-> Java server smoke check (needs the JAR)
+npm run eval:demo -w agent-orchestrator   # eval the offline model (add LLM_PROVIDER=ollama and use eval for a local model); see docs/evals.md
 npm run typecheck                    # tsc --noEmit in each workspace
 npm test                             # Vitest in each workspace
 npm run dev:mock -w agent-orchestrator   # API on :3001 with the offline model and a Node stand-in EHR (no JDK)
@@ -40,6 +41,7 @@ npm run build -w patient-portal-web  # typecheck plus production bundle
 - `safety/redFlags.ts`: deterministic detector and the static emergency notice. Golden set in `test/redFlags.test.ts`.
 - `graph/`: `state.ts`, `edges.ts` (typed routers), `nodes.ts`, `build.ts`, `localTools.ts`, `prompts.ts`, `messages.ts`.
 - `llm/`: `port.ts` (`LlmPort`), `anthropic.ts` (Claude), `ollama.ts` (a local model through Ollama), `demo.ts` (deterministic offline model, the default).
+- `eval/` (not shipped): `cases.ts` (synthetic conversations and the checks they must satisfy), `checks.ts`, `runner.ts` (plays a case through the graph), `summary.ts` (scores, report), `evaluate.ts`, `run.ts` (CLI). Add a case when you change a prompt or a tool; see `docs/evals.md`.
 - `telemetry/`: `tracing.ts` (OpenTelemetry setup, off by default), `spans.ts` (`withSpan`, `tracedNode`, `withLlmTracing`, and the `SafeAttributes` allowlist).
 - `mcp/ehr.ts`: adapter connection and the `bindSessionPatient` hook. `mcp/schemas.ts`: strict schemas for tool results.
 - `persistence/`: `NodeSqliteSaver` checkpointer plus thread and escalation stores, in memory or SQLite.
@@ -129,7 +131,7 @@ npm run build -w patient-portal-web  # typecheck plus production bundle
 ## Workflow
 
 - Work one step at a time and stop for approval after each step. The step list is in `README.md`.
-- Add tests with each feature. Do not commit or push unless asked.
+- Add tests with each feature. A change to prompts, tools or the graph should also be run through the eval (`docs/evals.md`) against the offline model, which must stay at 100%. Do not commit or push unless asked.
 - Say which dependency version you add and why.
 - Keep `docs/contracts.md` in sync with the code.
 

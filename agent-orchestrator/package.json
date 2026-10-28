@@ -11,7 +11,9 @@
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "eval": "node --import tsx eval/run.ts",
+    "eval:demo": "node --env-file=dev/mock.env --import tsx eval/run.ts"
   },
   "dependencies": {
     "@langchain/anthropic": "^1.6.0",

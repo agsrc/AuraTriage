@@ -10,6 +10,7 @@ target/
 logs/
 *.log
 /agent-orchestrator/data/
+/agent-orchestrator/eval/results/
 *.sqlite
 *.sqlite-journal
 *.db

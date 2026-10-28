@@ -28,6 +28,7 @@ The patient's ID never comes from the model. The chat service puts the signed-in
 - `test/persistence.test.ts`: a pause survives closing the database and rebuilding the graph.
 - `test/server.e2e.test.ts`: boots the real `server.ts` as a child process.
 - `test/tracing.test.ts`, `test/tracing.export.test.ts`: spans for nodes, model and tools, the no-patient-text check, and export to a fake collector as protobuf.
+- `test/eval.test.ts`: the eval cases pass with the offline model, and are shown failing for a model that books early, leaks a record or never escalates.
 - `test/ollama.test.ts`: the Ollama adapter against a fake HTTP server (text, tool calls, daemon down, model missing).
 
 Not covered by tests: the Claude implementation (`src/llm/anthropic.ts`) needs a real key, and the Ollama adapter has only met a fake server, not a real model. Neither has been run.

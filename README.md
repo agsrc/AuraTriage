@@ -6,7 +6,7 @@ Agentic healthcare triage MVP: a Java MCP server (mock EHR), a LangGraph.js orch
 patient-portal-web (React) --HTTP--> agent-orchestrator (Node, LangGraph) --MCP/stdio--> ehr-mcp-server (Java)
 ```
 
-See [docs/architecture.md](docs/architecture.md), [docs/contracts.md](docs/contracts.md), [docs/threat-model.md](docs/threat-model.md) and [CLAUDE.md](CLAUDE.md) for the engineering rules.
+See [docs/architecture.md](docs/architecture.md), [docs/contracts.md](docs/contracts.md), [docs/threat-model.md](docs/threat-model.md), [docs/evals.md](docs/evals.md) (how to score a model) and [CLAUDE.md](CLAUDE.md) for the engineering rules.
 
 ## Build steps
 
