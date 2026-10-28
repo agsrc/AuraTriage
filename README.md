@@ -10,13 +10,13 @@ See [docs/architecture.md](docs/architecture.md), [docs/contracts.md](docs/contr
 
 ## Build steps
 
-| Step | Scope                              | Status                                                                                                                                              |
-| ---- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0    | Toolchain: JDK 25, Node 26         | Done on the Mac. The Windows dev machine is stuck on JDK 21 and Node 24                                                                             |
-| 1    | Scaffold, `CLAUDE.md`, contracts   | Done                                                                                                                                                |
-| 2    | Java MCP server + connection spike | Done. Verified on the Mac with JDK 25, see [docs/verification.md](docs/verification.md)                                                             |
-| 3    | Node LangGraph orchestrator        | Done. Tested on Windows (Node 24) and verified on the Mac                                                                                           |
-| 4    | React portal and nurse dashboard   | Done. Tested on Windows (Node 24) and verified on the Mac, see [docs/verification.md](docs/verification.md)                                        |
+| Step | Scope                              | Status                                                                                                      |
+| ---- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| 0    | Toolchain: JDK 25, Node 26         | Done on the Mac. The Windows dev machine is stuck on JDK 21 and Node 24                                     |
+| 1    | Scaffold, `CLAUDE.md`, contracts   | Done                                                                                                        |
+| 2    | Java MCP server + connection spike | Done. Verified on the Mac with JDK 25, see [docs/verification.md](docs/verification.md)                     |
+| 3    | Node LangGraph orchestrator        | Done. Tested on Windows (Node 24) and verified on the Mac                                                   |
+| 4    | React portal and nurse dashboard   | Done. Tested on Windows (Node 24) and verified on the Mac, see [docs/verification.md](docs/verification.md) |
 
 ## Quick start
 
