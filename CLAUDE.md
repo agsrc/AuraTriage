@@ -132,4 +132,4 @@ npm run build -w patient-portal-web  # typecheck plus production bundle
 
 ## Status
 
-All four steps are approved. This Windows machine has JDK 21 and Node 24: the orchestrator and the portal are fully tested here, and the portal was also walked through in a browser. The Java Gatherer classes and the JDK 25 / Node 26 builds are verified on the Mac only. See `docs/verification.md`.
+All four steps are done and verified on the Mac with the target toolchain (JDK 25, Node 26). The Windows dev machine has JDK 21 and Node 24, so there the orchestrator and portal run and test fully but the Java server's Gatherer classes cannot be built. See `docs/verification.md` for what has and has not been checked.

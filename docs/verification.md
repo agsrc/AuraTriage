@@ -1,8 +1,10 @@
 # Verification
 
-The Windows dev machine has JDK 21 and Node 24 and cannot be upgraded, so the full build with the target toolchain (JDK 25, Node 26) is run on the Mac once everything is written. This page records what has and has not been checked.
+The full build with the target toolchain (JDK 25, Node 26) was run on the Mac and works. The Windows dev machine has JDK 21 and Node 24 and cannot be upgraded, so it covers everything except the Java 24+ Gatherer classes. This page records what has and has not been checked.
 
 ## Run this on the Mac (or in CI)
+
+This is the full check, and it passes on the Mac.
 
 ```
 node scripts/doctor.mjs     # JDK >= 25, Node >= 24 (target 26), git, npm
@@ -46,6 +48,8 @@ To see the whole product on the Mac, run the API and the portal in two terminals
 
 ## Verified on Windows (JDK 21, Node 24)
 
+This was the only check available while the code was written. The Mac run above supersedes it for everything the two have in common.
+
 ### Java server (Step 2)
 
 A throwaway copy of `ehr-mcp-server` was built with `-Djava.version=21`. In that copy the three Gatherer classes were replaced by plain-loop stand-ins with the same algorithms, because `java.util.stream.Gatherers` needs Java 24 or later. Results:
@@ -77,29 +81,20 @@ Nothing in the portal depends on Node 26 either, so it was tested in full on Nod
 - A manual walk-through in the built-in browser against the real API (offline model, stand-in EHR): sign-in; a message that makes the assistant ask for review (chat held, draft withheld); the nurse tab showing the concern and draft, then approving; the patient tab picking up the reply by itself; a red-flag message showing the "Call 911" banner, the emergency notice and the held composer; a 375 px phone layout; and the two-column nurse layout at 1280 px.
 - That walk-through found one real bug the tests could not: the Vite proxy read the generic `PORT` variable, which the host had set to the web server's own port, so every API call failed with 502. The proxy now uses `API_PROXY_TARGET`.
 
-## Not verified yet (Mac only)
+## Verified on the Mac (JDK 25, Node 26)
 
-Java 24+ APIs, in the real source files:
+The checks in "Run this on the Mac" pass. That covers the code that could not be built on Windows:
 
-- `transform/VitalsTrendAnalyzer.java` uses `Gatherers.windowSliding`.
-- `transform/EpisodeGatherers.java` is a custom `Gatherer.ofSequential` with an `Integrator` and a finisher.
-- `transform/AvailabilityAggregator.java` uses `Gatherers.mapConcurrent`.
-- The `.gather(EpisodeGatherers.episodesOfCare(...))` call in `service/ClinicalService.java`.
-- `EpisodeGatherersTest` and `AvailabilityAggregatorTest`, which only exist for the real Gatherers.
-- The `-Djava.version=25` build itself.
+- `transform/VitalsTrendAnalyzer.java` (`Gatherers.windowSliding`), `transform/EpisodeGatherers.java` (a custom `Gatherer.ofSequential`) and `transform/AvailabilityAggregator.java` (`Gatherers.mapConcurrent`), the `.gather(...)` call in `service/ClinicalService.java`, and `EpisodeGatherersTest` and `AvailabilityAggregatorTest`.
+- The `-Djava.version=25` build and the orchestrator and portal running on Node 26.
 
-If `npm run ehr:verify` fails to compile, look in those files first. The likeliest causes are generic type inference on `Gatherers.windowSliding` or `Gatherers.mapConcurrent`, or the exact `Gatherer.ofSequential` signature. The logic is covered by the stand-in tests, so a compile fix should not change behaviour.
+## Not checked yet
 
-Node and orchestrator:
-
-- **Node 26.** The same suite has not been run on it. `node:sqlite` is built in, so no native add-on is involved, but it may print a different experimental warning.
 - **Claude.** `LLM_PROVIDER=anthropic` (`src/llm/anthropic.ts`) needs a real API key and has never been run. With a key, first try one routine message and one booking, and check that tool calls use the `SESSION` placeholder and that `request_nurse_review` appears for an urgent-sounding case.
-- **Graceful shutdown** (the Ctrl+C check above).
-- **The orchestrator against the JDK 25 JAR.** Only the JDK 21 build was used.
+- **Graceful shutdown** (the Ctrl+C check above). Windows ends child processes abruptly, so this path can only be checked on the Mac.
 
 Web portal:
 
 - **Other browsers.** Only the built-in Chromium-based pane was used. Safari on the Mac is worth a look, in particular `field-sizing: content` on the message box (it falls back to a one-line box) and the `:has()` selector that highlights the chosen radio option.
 - **Assistive technology.** The semantics are in place (labels, `log` and `alert` regions, decorative icons hidden) and Biome checks the accessibility rules, but no screen reader was used.
 - **Keyboard-only use** was not walked through end to end.
-- **`npm run build` and `npm run dev` on Node 26 and macOS.**
