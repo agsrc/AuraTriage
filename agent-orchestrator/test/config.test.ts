@@ -57,6 +57,37 @@ describe("loadConfig", () => {
     expect(config.llm).toEqual({ provider: "anthropic", apiKey: "k", model: "claude-sonnet-5-5" });
   });
 
+  it("defaults the ollama provider to a local daemon and a small model", () => {
+    const config = loadConfig({ LLM_PROVIDER: "ollama" }, ROOT);
+
+    expect(config.llm).toEqual({
+      provider: "ollama",
+      baseUrl: "http://localhost:11434",
+      model: "qwen3:8b",
+      numCtx: 8192,
+    });
+  });
+
+  it("reads the ollama settings and rejects bad ones by name", () => {
+    const config = loadConfig(
+      {
+        LLM_PROVIDER: "ollama",
+        OLLAMA_BASE_URL: "http://127.0.0.1:9999",
+        OLLAMA_MODEL: "llama3.2:3b",
+        OLLAMA_NUM_CTX: "4096",
+      },
+      ROOT,
+    );
+    expect(config.llm).toEqual({
+      provider: "ollama",
+      baseUrl: "http://127.0.0.1:9999",
+      model: "llama3.2:3b",
+      numCtx: 4096,
+    });
+    expect(() => loadConfig({ OLLAMA_BASE_URL: "not a url" }, ROOT)).toThrow(/OLLAMA_BASE_URL/);
+    expect(() => loadConfig({ OLLAMA_NUM_CTX: "10" }, ROOT)).toThrow(/OLLAMA_NUM_CTX/);
+  });
+
   it("rejects a malformed demo patient list", () => {
     expect(() => loadConfig({ DEMO_PATIENT_IDS: "P-1001,bob" }, ROOT)).toThrow(ConfigError);
   });

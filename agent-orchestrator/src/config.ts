@@ -11,9 +11,12 @@ const EnvSchema = z.object({
   JWT_SECRET: z.string().min(16).default(DEV_JWT_SECRET),
   ENABLE_DEMO_LOGIN: z.stringbool().optional(),
   DEMO_PATIENT_IDS: z.string().default("P-1001,P-1002,P-1003,P-1004,P-1005"),
-  LLM_PROVIDER: z.enum(["fake", "anthropic"]).default("fake"),
+  LLM_PROVIDER: z.enum(["fake", "anthropic", "ollama"]).default("fake"),
   ANTHROPIC_API_KEY: z.string().min(1).optional(),
   ANTHROPIC_MODEL: z.string().min(1).default("claude-sonnet-5-5"),
+  OLLAMA_BASE_URL: z.url({ protocol: /^https?$/ }).default("http://localhost:11434"),
+  OLLAMA_MODEL: z.string().min(1).default("qwen3:8b"),
+  OLLAMA_NUM_CTX: z.coerce.number().int().min(2048).max(131072).default(8192),
   EHR_MCP_SERVER: z.enum(["jar", "mock"]).default("jar"),
   EHR_MCP_JAR: z.string().min(1).default("ehr-mcp-server/target/ehr-mcp-server.jar"),
   JAVA_BIN: z.string().min(1).optional(),
@@ -28,7 +31,10 @@ export interface Config {
   jwtSecret: string;
   demoLoginEnabled: boolean;
   demoPatientIds: readonly string[];
-  llm: { provider: "fake" } | { provider: "anthropic"; apiKey: string; model: string };
+  llm:
+    | { provider: "fake" }
+    | { provider: "anthropic"; apiKey: string; model: string }
+    | { provider: "ollama"; baseUrl: string; model: string; numCtx: number };
   ehrServer: { command: string; args: readonly string[] };
   /** Absolute path of the SQLite file, or null to keep everything in memory. */
   databasePath: string | null;
@@ -78,6 +84,13 @@ export function loadConfig(env: NodeJS.ProcessEnv, repoRoot: string): Config {
       throw new ConfigError("Invalid environment configuration: ANTHROPIC_API_KEY");
     }
     llm = { provider: "anthropic", apiKey: vars.ANTHROPIC_API_KEY, model: vars.ANTHROPIC_MODEL };
+  } else if (vars.LLM_PROVIDER === "ollama") {
+    llm = {
+      provider: "ollama",
+      baseUrl: vars.OLLAMA_BASE_URL,
+      model: vars.OLLAMA_MODEL,
+      numCtx: vars.OLLAMA_NUM_CTX,
+    };
   } else {
     llm = { provider: "fake" };
   }

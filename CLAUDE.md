@@ -39,7 +39,7 @@ npm run build -w patient-portal-web  # typecheck plus production bundle
 - `contracts.ts`: Zod schemas and response types for the HTTP API. `config.ts`: env parsing (errors name variables, never values) and forced-off tracing.
 - `safety/redFlags.ts`: deterministic detector and the static emergency notice. Golden set in `test/redFlags.test.ts`.
 - `graph/`: `state.ts`, `edges.ts` (typed routers), `nodes.ts`, `build.ts`, `localTools.ts`, `prompts.ts`, `messages.ts`.
-- `llm/`: `port.ts` (`LlmPort`), `anthropic.ts` (Claude), `demo.ts` (deterministic offline model, the default).
+- `llm/`: `port.ts` (`LlmPort`), `anthropic.ts` (Claude), `ollama.ts` (a local model through Ollama), `demo.ts` (deterministic offline model, the default).
 - `mcp/ehr.ts`: adapter connection and the `bindSessionPatient` hook. `mcp/schemas.ts`: strict schemas for tool results.
 - `persistence/`: `NodeSqliteSaver` checkpointer plus thread and escalation stores, in memory or SQLite.
 - `chat/service.ts`: ownership rules, turns and the nurse queue. `api/app.ts`: Express routes, auth, error mapping.
@@ -61,7 +61,7 @@ npm run build -w patient-portal-web  # typecheck plus production bundle
 - `@langchain/mcp-adapters` 2.x: class `MCPAdapter`, config key `servers` (not `mcpServers`), tool names are prefixed `{server}_{tool}` so the EHR tools appear as `ehr_get_patient_history` etc. Never hard-code unprefixed names in graph code. The global `beforeToolCall` hook on the adapter config receives the raw tool name (`get_patient_history`, no prefix), the args and the LangGraph `config`, and the `args` it returns are merged over the model's. Installed: adapter 2.0.1, `@langchain/core` 1.3.0, `@langchain/langgraph` 1.5.3.
 - LangGraph.js 1.x: use `interrupt()` + `Command({ resume })` with a checkpointer and a `thread_id`. A node re-runs from its first line on resume. The checkpointer is our own `NodeSqliteSaver`, a port of the official SQLite saver onto Node's built-in `node:sqlite`, because the official one needs the native `better-sqlite3`. `node:sqlite` prints an ExperimentalWarning on Node 24.
 - Web: React 19.3, React Router 8 (needs Node 22.22+), Vite 8, Tailwind 4.3 via its Vite plugin (no config file, tokens in `src/index.css`), Testing Library with jsdom 30.
-- Also pinned: Express 5, Zod 4, pino 10, jose 6, Vitest 5, tsx (dev only). `.env` at the repo root is loaded with `process.loadEnvFile`, so there is no dotenv. `LLM_PROVIDER` defaults to the offline demo model; `anthropic` needs `ANTHROPIC_API_KEY` and has not been run against the real API yet.
+- Also pinned: Express 5, Zod 4, pino 10, jose 6, Vitest 5, tsx (dev only). `.env` at the repo root is loaded with `process.loadEnvFile`, so there is no dotenv. `LLM_PROVIDER` defaults to the offline demo model; `anthropic` needs `ANTHROPIC_API_KEY` and has not been run against the real API yet. `ollama` (`@langchain/ollama` 1.3) talks to a local daemon, with thinking off and `OLLAMA_NUM_CTX` (default 8192) as the context size; its tests use a fake HTTP server, so it has not been run against a real model yet.
 - TypeScript 7 has no stable compiler API until 7.1, so `typescript-eslint` is not used. Biome does lint/format; `tsc` does type checking.
 
 ## Rules (non-negotiable)

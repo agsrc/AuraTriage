@@ -27,5 +27,6 @@ The patient's ID never comes from the model. The chat service puts the signed-in
 - `test/api.test.ts`: the whole stack over HTTP with the real MCP adapter and stand-in EHR, including the log-privacy check.
 - `test/persistence.test.ts`: a pause survives closing the database and rebuilding the graph.
 - `test/server.e2e.test.ts`: boots the real `server.ts` as a child process.
+- `test/ollama.test.ts`: the Ollama adapter against a fake HTTP server (text, tool calls, daemon down, model missing).
 
-Not covered by tests: the Claude implementation (`src/llm/anthropic.ts`) needs a real key and has not been run.
+Not covered by tests: the Claude implementation (`src/llm/anthropic.ts`) needs a real key, and the Ollama adapter has only met a fake server, not a real model. Neither has been run.

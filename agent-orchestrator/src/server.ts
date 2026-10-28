@@ -1,10 +1,12 @@
 import path from "node:path";
 import { createApp } from "./api/app.js";
 import { ChatService } from "./chat/service.js";
-import { ConfigError, disableTracing, loadConfig } from "./config.js";
+import { type Config, ConfigError, disableTracing, loadConfig } from "./config.js";
 import { buildTriageGraph } from "./graph/build.js";
 import { createAnthropicLlm } from "./llm/anthropic.js";
 import { createDemoLlm } from "./llm/demo.js";
+import { createOllamaLlm } from "./llm/ollama.js";
+import type { LlmPort } from "./llm/port.js";
 import { createLogger } from "./logger.js";
 import { connectEhr } from "./mcp/ehr.js";
 import { createPersistence } from "./persistence/index.js";
@@ -17,6 +19,17 @@ function loadDotEnv(): void {
     process.loadEnvFile(path.join(repoRoot, ".env"));
   } catch {
     // No .env file: use the real environment only.
+  }
+}
+
+function createLlm(llm: Config["llm"]): LlmPort {
+  switch (llm.provider) {
+    case "anthropic":
+      return createAnthropicLlm(llm);
+    case "ollama":
+      return createOllamaLlm(llm);
+    case "fake":
+      return createDemoLlm();
   }
 }
 
@@ -34,8 +47,7 @@ async function main(): Promise<void> {
 
   const persistence = createPersistence(config.databasePath);
   const ehr = await connectEhr(config.ehrServer);
-  const llm =
-    config.llm.provider === "anthropic" ? createAnthropicLlm(config.llm) : createDemoLlm();
+  const llm = createLlm(config.llm);
   const graph = buildTriageGraph(
     { llm, tools: ehr.tools, now: () => new Date() },
     persistence.checkpointer,
